@@ -7,10 +7,15 @@ import hashlib
 import functools
 # TODO se decider entre `path' et `filename', `filepath' and `directory'
 # TODO une option pour exclude ['.hg', '.svn', 'git']
+# TODO gerer les ecludes dans Dir.subdirs
+# TODO? Dir.is_excluded(filepath)
+# TODO refaire/renommer le get_exclude
 log = logging.getLogger("dirtools")
 
 
 def load_patterns(exclude_file):
+    """ Load patterns to exclude file from `exclude_file',
+    and return a list of pattern. """
     return filter(None, open(exclude_file).read().split("\n"))
 
 
@@ -23,10 +28,21 @@ def is_excluded(patterns, filename):
 
 
 def get_exclude(exclude_file):
+    """ Load a .gitignore like file to exclude files/dir from backups.
+
+    :type exclude_file: str
+    :param exclude_file: Path to the exclude file
+
+    :rtype: function
+    :return: A function ready to inject in tar.add(exlude=_exclude)
+
+    """
     return functools.partial(is_excluded, load_patterns(exclude_file))
 
 
 def filehash(filepath, blocksize=4096):
+    """ Return the hash for the file `filepath', processing the file
+    by chunk of `blocksize'. """
     sha = hashlib.sha256()
     with open(filepath, 'rb') as fp:
         while 1:
@@ -79,18 +95,20 @@ class Dir(object):
 
     @property
     def files(self):
+        """ Generator for all the files not excluded recursively. """
         for root, dirs, files in os.walk(self.path):
             for d in dirs:
-                reldir = os.path.relpath(os.path.join(root, d), self.path)
+                reldir = self.relpath(os.path.join(root, d))
                 if is_excluded(self.patterns, reldir):
                     dirs.remove(d)
             for fpath in [os.path.join(root, f) for f in files]:
-                relpath = os.path.relpath(fpath, self.path)
+                relpath = self.relpath(fpath)
                 if not is_excluded(self.patterns, relpath):
                     yield relpath
 
     @property
     def hash(self):
+        """ Hash for the entire directory recursively. """
         shadir = hashlib.sha256()
         for f in self.files:
             try:
@@ -101,8 +119,23 @@ class Dir(object):
 
     @property
     def subdirs(self):
+        """ List of all subdirs. """
         for p in listsubdir(self.path):
-            yield os.path.relpath(p, self.path)
+            yield self.relpath(p)
 
     def find_project(self, file_identifier=".project"):
+        """ Search all directory recursively for subidirs
+        with `file_identifier' in it.
+
+        :type file_identifier: str
+        :param file_identifier: File identier, .project by default.
+
+        :rtype: list
+        :return: The list of subdirs with a `file_identifier' in it.
+
+        """
         return listproject(file_identifier, path=self.path)
+
+    def relpath(self, path):
+        """ Return a relative filepath to path from Dir path. """
+        return os.path.relpath(path, start=self.path)

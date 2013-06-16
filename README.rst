@@ -1,20 +1,120 @@
-===================
-Package Boilerplate
-===================
+========
+Dirtools
+========
 
-Python package boilerplate for package that fit in a single file (optimized for me).
+Dirtools is a little Python package aimed to provide the following features:
 
-Comes with a modified version of `kr-sphinx-themes <https://github.com/kennethreitz/kr-sphinx-themes>`_ for sphinx docs (font updated with `Open Sans <http://www.google.com/fonts/specimen/Open+Sans>`_ and `Incosolota <http://www.google.com/fonts/specimen/Inconsolata>`_ for code, from Google Fonts).
+* Exclude/ignore files in a directory, using .gitignore like syntax (unix filename pattern matching).
+* Generate a hash for a directory tree in order to check if a directory has been modified.
+* Search recursively for all subidirs containing a given filename (all projects directory inside a dir).
 
- 
 
 Getting Started
 ===============
 
-* Replace **packagename** in .gitignore
-* Update setup.py
-* Start coding
-* Update docs/conf.py and start writing docs
+Excluding files
+---------------
+
+Using dirtools to exclude files with tarfile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is two ways to do this, here is the first one:
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    d.is_excluded('')
+
+And here is the second:
+
+.. code-block:: python
+
+    from dirtools import get_excluder
+
+
+Hashdir
+-------
+
+Here is how to compute the hash of a directory:
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    hashdir = d.hash
+
+Or using the ``Dir`` class:
+
+.. code-block:: python
+
+    import dirtools
+
+    hash = dirtools.hashdir('/path/to/dir')
+
+Find directories containing a file
+----------------------------------
+
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    hashdir = d.hash
+
+Or using the ``Dir`` class:
+
+.. code-block:: python
+
+    import dirtools
+
+    hash = dirtools.hashdir('/path/to/dir')
+
+
+Helpers
+-------
+
+List all subdirectories of a directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    import dirtools
+
+    dirs = dirtools.listsubdir('/path/to/dir')
+
+Or using the ``Dir`` class:
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+
+    dirs = d.subdirs
+
+
+List all files recurively
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    import dirtools
+
+    dirs = dirtools.listsubdir('/path/to/dir')
+
+Or using the ``Dir`` class:
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+
+    dirs = d.subdirs
 
 
 License (MIT)
