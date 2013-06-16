@@ -13,16 +13,36 @@ import functools
 log = logging.getLogger("dirtools")
 
 
-def load_patterns(exclude_file):
+def load_patterns(exclude_file=".exclude"):
     """ Load patterns to exclude file from `exclude_file',
-    and return a list of pattern. """
+    and return a list of pattern.
+
+    :type exclude_file: str
+    :param exclude_file: File containing exlude patterns
+
+    :rtype: list
+    :return: List a patterns
+
+    """
     return filter(None, open(exclude_file).read().split("\n"))
 
 
-def is_excluded(patterns, filename):
+def is_excluded(patterns, path):
+    """ Return True `filename' match a fnmatch pattern.
+
+    :type patterns: list
+    :param patterns: List of fnmatch pattern that trigger exclusion
+
+    :type path: str
+    :param path: Path to Check
+
+    :rtype: bool
+    :return: True if path should be excluded
+
+    """
     for pattern in patterns:
-        if re.search(fnmatch.translate(pattern), filename):
-            log.debug("{0} excluded".format(filename))
+        if re.search(fnmatch.translate(pattern), path):
+            log.debug("{0} excluded".format(path))
             return True
     return False
 
@@ -93,17 +113,22 @@ class Dir(object):
         if os.path.isfile(self.exclude_file):
             self.patterns = load_patterns(self.exclude_file)
 
+    def is_excluded(self, path):
+        """ Return True if `path' should be excluded
+        given patterns in the `exclude_file'. """
+        return is_excluded(self.patterns, self.relpath(path))
+
     @property
     def files(self):
         """ Generator for all the files not excluded recursively. """
         for root, dirs, files in os.walk(self.path):
             for d in dirs:
                 reldir = self.relpath(os.path.join(root, d))
-                if is_excluded(self.patterns, reldir):
+                if self.is_excluded(reldir):
                     dirs.remove(d)
             for fpath in [os.path.join(root, f) for f in files]:
                 relpath = self.relpath(fpath)
-                if not is_excluded(self.patterns, relpath):
+                if not self.is_excluded(relpath):
                     yield relpath
 
     @property

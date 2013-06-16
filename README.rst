@@ -15,23 +15,39 @@ Getting Started
 Excluding files
 ---------------
 
-Using dirtools to exclude files with tarfile
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dirtools let you exlude files using .gitignore like syntax (unix filename pattern matching), by default ``dirtools`` will look for a ``.exclude`` file at root.
 
-There is two ways to do this, here is the first one:
+Here is how to check if a file should be excluded:
 
 .. code-block:: python
 
     from dirtools import Dir
 
-    d = Dir('/path/to/dir')
-    d.is_excluded('')
+    d = Dir('/path/to/dir', exclude_file='.gitignore')
+    d.is_excluded('/path/to/dir/script.pyc')
 
-And here is the second:
+Or using only functions:
 
 .. code-block:: python
 
-    from dirtools import get_excluder
+    import dirtools as dt
+
+    patterns = dt.load_patterns('.gitignore')
+    is_excluded(patterns, '/path/to/dir/script.pyc')
+
+
+Using dirtools to exclude files with tarfile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    import tarfile
+    from dirtools import Dir
+
+    d = Dir('/path/to/mydir', exclude_file='.gitignore')
+
+    with tarfile.open(fileobj=out, mode="w:gz")) as tar:
+        tar.add(filename, arcname=arcname, exclude=d.is_excluded)
 
 
 Hashdir
