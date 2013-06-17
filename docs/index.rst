@@ -1,32 +1,139 @@
-packagename: Package Name
-=========================
+Dirtools
+========
 
 .. raw:: html
 
     <p>
     <span style="width:100px;float:left;">
-      <iframe src="http://ghbtns.com/github-btn.html?user=tsileo&repo=packagename&type=watch&count=true&size=small"
+      <iframe src="http://ghbtns.com/github-btn.html?user=tsileo&repo=dirtools&type=watch&count=true&size=small"
         allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
     </span><span style="width:100px;float:left;">    
-    <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://packagename.readthedocs.org" data-text="Package Name" data-via="trucsdedev">Tweet</a>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://dirtools.readthedocs.org" data-text="Dirtools" data-via="trucsdedev">Tweet</a>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script></span></p>
     <p style="clear:left"></p>
 
-.. module:: packagename
+.. module:: dirtools
 
 Release v\ |version|.
 
-Introduction
 
-Title
------
+Dirtools is a little Python package aimed to provide the following features:
 
-Content.
+* Exclude/ignore files in a directory, using .gitignore like syntax (unix filename pattern matching).
+* Generate a hash for a directory tree in order to check if a directory has been modified.
+* Search recursively for all subidirs containing a given filename (all projects directory inside a dir).
 
-Articles
---------
 
-* `Add yours <>`_
+Getting Started
+===============
+
+Excluding files
+---------------
+
+Dirtools let you exlude files using .gitignore like syntax (unix filename pattern matching), by default ``dirtools`` will look for a ``.exclude`` file at root.
+
+Here is how to check if a file should be excluded:
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir', exclude_file='.gitignore')
+    d.is_excluded('/path/to/dir/script.pyc')
+
+
+Using dirtools to exclude files with tarfile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    import tarfile
+    from dirtools import Dir
+
+    d = Dir('/path/to/mydir', exclude_file='.gitignore')
+
+    with tarfile.open(fileobj=out, mode="w:gz")) as tar:
+        tar.add(filename, arcname=arcname, exclude=d.is_excluded)
+
+
+Hashdir
+-------
+
+The hashdir represent the state of every files in a directory. It compute the hash of the hash of each file recursively.
+
+Here is how to compute the hash of a directory, excluded files ares skipped if any.
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    hashdir = d.hash
+
+
+Find directories containing a file
+----------------------------------
+
+We'll call these directories **project**, ``find_projects`` will search recursively for subdirectories with a ``file_identifier`` file in it.
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    projects = d.find_projects(".project")
+
+
+Helpers
+-------
+
+All methods/properties exclude files and directories based on patterns in ``exclude_file`` and the ``excludes`` list.
+
+Custom Walker
+~~~~~~~~~~~~~
+
+If you need to perform operations on files or directories, you can use ``Dir.walk``, it works exactly like ``os.walk``, except it will skip excluded files/directories on the fly.
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    
+    for root, dirs, files in self.walk():
+        # do something
+
+
+List all subdirectories of a directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+
+    dirs = d.subdirs
+
+
+List all files recusively
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+
+    files = d.files
+
+
+API
+---
+
+.. autoclass:: dirtools.Dir
+   :members:
+
 
 Feedback
 --------

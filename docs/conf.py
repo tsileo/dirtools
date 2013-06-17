@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'YuPyKey'
+project = u'Dirtools'
 copyright = u'2013, Thomas Sileo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'YuPyKeydoc'
+htmlhelp_basename = 'Dirtoolsdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
