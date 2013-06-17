@@ -5,11 +5,12 @@ import logging
 import os
 import hashlib
 import functools
+
+from globster import Globster
 # TODO se decider entre `path' et `filename', `filepath' and `directory'
 # TODO une option pour exclude ['.hg', '.svn', 'git']
-# TODO gerer les ecludes dans Dir.subdirs
-# TODO? Dir.is_excluded(filepath)
-# TODO refaire/renommer le get_exclude
+# TODO gerer les ecludes dans Dir.subdirs =>  topdown=True, pareils que Dir.files
+#      => http://stackoverflow.com/questions/5141437/filtering-os-walk-dirs-and-files
 log = logging.getLogger("dirtools")
 
 
@@ -18,7 +19,7 @@ def load_patterns(exclude_file=".exclude"):
     and return a list of pattern.
 
     :type exclude_file: str
-    :param exclude_file: File containing exlude patterns
+    :param exclude_file: File containing exclude patterns
 
     :rtype: list
     :return: List a patterns
@@ -34,16 +35,17 @@ def is_excluded(patterns, path):
     :param patterns: List of fnmatch pattern that trigger exclusion
 
     :type path: str
-    :param path: Path to Check
+    :param path: Relative path to check
 
     :rtype: bool
     :return: True if path should be excluded
 
     """
-    for pattern in patterns:
-        if re.search(fnmatch.translate(pattern), path):
-            log.debug("{0} excluded".format(path))
-            return True
+    g = Globster(patterns)
+    match = g.match(path)
+    if match:
+        log.debug("{0} matched {1} for exclusion".format(path, match))
+        return True
     return False
 
 
@@ -54,7 +56,7 @@ def get_exclude(exclude_file):
     :param exclude_file: Path to the exclude file
 
     :rtype: function
-    :return: A function ready to inject in tar.add(exlude=_exclude)
+    :return: A function ready to inject in tar.add(exclude=_exclude)
 
     """
     return functools.partial(is_excluded, load_patterns(exclude_file))
@@ -90,7 +92,7 @@ def hashdir(dirname):
 
 def listsubdir(path='.'):
     """ Yield all subdirectory of path. """
-    for dirname, dirnames, filenames in os.walk(path):
+    for dirname, dirnames, filenames in os.walk(path, topdown=True):
         # print path to all subdirectories first.
         for subdirname in dirnames:
             yield os.path.join(dirname, subdirname)
@@ -105,13 +107,13 @@ def listproject(filename, path="."):
 
 
 class Dir(object):
-    def __init__(self, directory=".", exclude_file=".exclude"):
+    def __init__(self, directory=".", exclude_file=".exclude", excludes=['.git/', '.hg/', '.svn/']):
         self.directory = directory
         self.path = os.path.abspath(directory)
         self.exclude_file = os.path.join(self.path, exclude_file)
-        self.patterns = []
+        self.patterns = excludes
         if os.path.isfile(self.exclude_file):
-            self.patterns = load_patterns(self.exclude_file)
+            self.patterns.extend(load_patterns(self.exclude_file))
 
     def is_excluded(self, path):
         """ Return True if `path' should be excluded
@@ -121,15 +123,13 @@ class Dir(object):
     @property
     def files(self):
         """ Generator for all the files not excluded recursively. """
-        for root, dirs, files in os.walk(self.path):
-            for d in dirs:
-                reldir = self.relpath(os.path.join(root, d))
-                if self.is_excluded(reldir):
+        for root, dirs, files in os.walk(self.path, topdown=True):
+            for d in list(dirs):
+                if self.is_excluded(os.path.join(root, d)):
                     dirs.remove(d)
             for fpath in [os.path.join(root, f) for f in files]:
-                relpath = self.relpath(fpath)
-                if not self.is_excluded(relpath):
-                    yield relpath
+                if not self.is_excluded(fpath):
+                    yield self.relpath(fpath)
 
     @property
     def hash(self):
@@ -146,7 +146,8 @@ class Dir(object):
     def subdirs(self):
         """ List of all subdirs. """
         for p in listsubdir(self.path):
-            yield self.relpath(p)
+            if not self.is_excluded(p):
+                yield self.relpath(p)
 
     def find_project(self, file_identifier=".project"):
         """ Search all directory recursively for subidirs

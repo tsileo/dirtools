@@ -30,10 +30,10 @@ Or using only functions:
 
 .. code-block:: python
 
-    import dirtools as dt
+    import dirtools
 
-    patterns = dt.load_patterns('.gitignore')
-    is_excluded(patterns, '/path/to/dir/script.pyc')
+    patterns = dirtools.load_patterns('.gitignore')
+    dirtools.is_excluded(patterns, '/path/to/dir/script.pyc')
 
 
 Using dirtools to exclude files with tarfile
@@ -53,6 +53,8 @@ Using dirtools to exclude files with tarfile
 Hashdir
 -------
 
+The hashdir represent the state of every files in a directory. It compute the hash of the hash of each file recurively.
+
 Here is how to compute the hash of a directory:
 
 .. code-block:: python
@@ -62,13 +64,14 @@ Here is how to compute the hash of a directory:
     d = Dir('/path/to/dir')
     hashdir = d.hash
 
-Or using the ``Dir`` class:
+The other way:
 
 .. code-block:: python
 
     import dirtools
 
     hash = dirtools.hashdir('/path/to/dir')
+
 
 Find directories containing a file
 ----------------------------------
@@ -116,21 +119,7 @@ Or using the ``Dir`` class:
 List all files recurively
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
 
-    import dirtools
-
-    dirs = dirtools.listsubdir('/path/to/dir')
-
-Or using the ``Dir`` class:
-
-.. code-block:: python
-
-    from dirtools import Dir
-
-    d = Dir('/path/to/dir')
-
-    dirs = d.subdirs
 
 
 License (MIT)

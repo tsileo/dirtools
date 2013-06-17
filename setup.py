@@ -16,7 +16,7 @@ setup(
     url="https://github.com/tsileo/dirtools",
     py_modules=["dirtools"],
     long_description=read("README.rst"),
-    install_requires=[],
+    install_requires=["globster"],
 #    entry_points={'console_scripts': ["mycommand = dirtools:main"]},
     classifiers=[
         "Development Status :: 4 - Beta",
