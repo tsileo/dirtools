@@ -44,7 +44,7 @@ Using dirtools to exclude files with tarfile
 Hashdir
 -------
 
-The hashdir represent the state of every files in a directory. It compute the hash of the hash of each file recurively.
+The hashdir represent the state of every files in a directory. It compute the hash of the hash of each file recursively.
 
 Here is how to compute the hash of a directory, excluded files ares skipped if any.
 
@@ -72,7 +72,7 @@ We'll call these directories **project**, ``find_projects`` will search recursiv
 Helpers
 -------
 
-All methods/properties exclude files and directories based on patterns in ``exclude_file`` and the ``excludes``list.
+All methods/properties exclude files and directories based on patterns in ``exclude_file`` and the ``excludes`` list.
 
 Custom Walker
 ~~~~~~~~~~~~~
