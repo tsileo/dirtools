@@ -11,6 +11,9 @@ from globster import Globster
 # TODO une option pour exclude ['.hg', '.svn', 'git']
 # TODO gerer les ecludes dans Dir.subdirs =>  topdown=True, pareils que Dir.files
 #      => http://stackoverflow.com/questions/5141437/filtering-os-walk-dirs-and-files
+
+# TODO? faire des raccourcis, genre dirtools.listsubdir => Dir(path).subdirs
+
 log = logging.getLogger("dirtools")
 
 
@@ -28,40 +31,6 @@ def load_patterns(exclude_file=".exclude"):
     return filter(None, open(exclude_file).read().split("\n"))
 
 
-def is_excluded(patterns, path):
-    """ Return True `filename' match a fnmatch pattern.
-
-    :type patterns: list
-    :param patterns: List of fnmatch pattern that trigger exclusion
-
-    :type path: str
-    :param path: Relative path to check
-
-    :rtype: bool
-    :return: True if path should be excluded
-
-    """
-    g = Globster(patterns)
-    match = g.match(path)
-    if match:
-        log.debug("{0} matched {1} for exclusion".format(path, match))
-        return True
-    return False
-
-
-def get_exclude(exclude_file):
-    """ Load a .gitignore like file to exclude files/dir from backups.
-
-    :type exclude_file: str
-    :param exclude_file: Path to the exclude file
-
-    :rtype: function
-    :return: A function ready to inject in tar.add(exclude=_exclude)
-
-    """
-    return functools.partial(is_excluded, load_patterns(exclude_file))
-
-
 def filehash(filepath, blocksize=4096):
     """ Return the hash for the file `filepath', processing the file
     by chunk of `blocksize'. """
@@ -77,6 +46,7 @@ def filehash(filepath, blocksize=4096):
 
 
 def hashdir(dirname):
+    """ Compute sha256 hash for `dirname'. """
     shadir = hashlib.sha256()
     for root, dirs, files in os.walk(dirname):
         for fpath in [os.path.join(root, f) for f in files]:
@@ -90,22 +60,6 @@ def hashdir(dirname):
         return shadir.hexdigest()
 
 
-def listsubdir(path='.'):
-    """ Yield all subdirectory of path. """
-    for dirname, dirnames, filenames in os.walk(path, topdown=True):
-        # print path to all subdirectories first.
-        for subdirname in dirnames:
-            yield os.path.join(dirname, subdirname)
-
-
-def listproject(filename, path="."):
-    """ Yield all dirs that contains `filename'
-    recursively from `path' """
-    for d in list(listsubdir(path)):
-        if os.path.isfile(os.path.join(d, filename)):
-            yield d
-
-
 class Dir(object):
     def __init__(self, directory=".", exclude_file=".exclude", excludes=['.git/', '.hg/', '.svn/']):
         self.directory = directory
@@ -114,22 +68,44 @@ class Dir(object):
         self.patterns = excludes
         if os.path.isfile(self.exclude_file):
             self.patterns.extend(load_patterns(self.exclude_file))
+        self.globster = Globster(self.patterns)
 
     def is_excluded(self, path):
         """ Return True if `path' should be excluded
         given patterns in the `exclude_file'. """
-        return is_excluded(self.patterns, self.relpath(path))
+        match = self.globster.match(self.relpath(path))
+        if match:
+            log.debug("{0} matched {1} for exclusion".format(path, match))
+            return True
+        return False
+
+    def walk(self):
+        """ Walk the directory like os.path
+        (yields a 3-tuple (dirpath, dirnames, filenames)
+        except it exclude all files/directories on the fly.
+        """
+        for root, dirs, files in os.walk(self.path, topdown=True):
+            ndirs = []
+            # First we exclude directories
+            for d in list(dirs):
+                if self.is_excluded(os.path.join(root, d)):
+                    dirs.remove(d)
+                else:
+                    ndirs.append(d)
+
+            nfiles = []
+            for fpath in (os.path.join(root, f) for f in files):
+                if not self.is_excluded(fpath):
+                    nfiles.append(os.path.relpath(fpath, root))
+
+            yield root, ndirs, nfiles
 
     @property
     def files(self):
         """ Generator for all the files not excluded recursively. """
-        for root, dirs, files in os.walk(self.path, topdown=True):
-            for d in list(dirs):
-                if self.is_excluded(os.path.join(root, d)):
-                    dirs.remove(d)
-            for fpath in [os.path.join(root, f) for f in files]:
-                if not self.is_excluded(fpath):
-                    yield self.relpath(fpath)
+        for root, dirs, files in self.walk():
+            for f in files:
+                yield self.relpath(os.path.join(root, f))
 
     @property
     def hash(self):
@@ -145,12 +121,12 @@ class Dir(object):
     @property
     def subdirs(self):
         """ List of all subdirs. """
-        for p in listsubdir(self.path):
-            if not self.is_excluded(p):
-                yield self.relpath(p)
+        for root, dirs, files in self.walk():
+            for d in dirs:
+                yield self.relpath(os.path.join(root, d))
 
     def find_project(self, file_identifier=".project"):
-        """ Search all directory recursively for subidirs
+        """ Search all directory recursively for subdirs
         with `file_identifier' in it.
 
         :type file_identifier: str
@@ -160,7 +136,9 @@ class Dir(object):
         :return: The list of subdirs with a `file_identifier' in it.
 
         """
-        return listproject(file_identifier, path=self.path)
+        for d in self.subdirs:
+            if os.path.isfile(os.path.join(d, file_identifier)):
+                yield d
 
     def relpath(self, path):
         """ Return a relative filepath to path from Dir path. """
