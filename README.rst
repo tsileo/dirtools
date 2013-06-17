@@ -1,6 +1,6 @@
-========
-Dirtools
-========
+==========
+ Dirtools
+==========
 
 Dirtools is a little Python package aimed to provide the following features:
 
@@ -26,15 +26,6 @@ Here is how to check if a file should be excluded:
     d = Dir('/path/to/dir', exclude_file='.gitignore')
     d.is_excluded('/path/to/dir/script.pyc')
 
-Or using only functions:
-
-.. code-block:: python
-
-    import dirtools
-
-    patterns = dirtools.load_patterns('.gitignore')
-    dirtools.is_excluded(patterns, '/path/to/dir/script.pyc')
-
 
 Using dirtools to exclude files with tarfile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,7 +46,7 @@ Hashdir
 
 The hashdir represent the state of every files in a directory. It compute the hash of the hash of each file recurively.
 
-Here is how to compute the hash of a directory:
+Here is how to compute the hash of a directory, excluded files ares skipped if any.
 
 .. code-block:: python
 
@@ -63,49 +54,43 @@ Here is how to compute the hash of a directory:
 
     d = Dir('/path/to/dir')
     hashdir = d.hash
-
-The other way:
-
-.. code-block:: python
-
-    import dirtools
-
-    hash = dirtools.hashdir('/path/to/dir')
 
 
 Find directories containing a file
 ----------------------------------
 
+We'll call these directories **project**, ``find_projects`` will search recursively for subdirectories with a ``file_identifier`` file in it.
 
 .. code-block:: python
 
     from dirtools import Dir
 
     d = Dir('/path/to/dir')
-    hashdir = d.hash
-
-Or using the ``Dir`` class:
-
-.. code-block:: python
-
-    import dirtools
-
-    hash = dirtools.hashdir('/path/to/dir')
+    projects = d.find_projects(".project")
 
 
 Helpers
 -------
 
-List all subdirectories of a directory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All methods/properties exclude files and directories based on patterns in ``exclude_file`` and the ``excludes``list.
+
+Custom Walker
+~~~~~~~~~~~~~
+
+If you need to perform operations on files or directories, you can use ``Dir.walk``, it works exactly like ``os.walk``, except it will skip excluded files/directories on the fly.
 
 .. code-block:: python
 
-    import dirtools
+    from dirtools import Dir
 
-    dirs = dirtools.listsubdir('/path/to/dir')
+    d = Dir('/path/to/dir')
+    
+    for root, dirs, files in self.walk():
+        # do something
 
-Or using the ``Dir`` class:
+
+List all subdirectories of a directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -116,10 +101,16 @@ Or using the ``Dir`` class:
     dirs = d.subdirs
 
 
-List all files recurively
+List all files recusively
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. code-block:: python
 
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+
+    files = d.files
 
 
 License (MIT)
