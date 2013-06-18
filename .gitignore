@@ -1,7 +1,7 @@
 *.pyc
 build/
 dist/
-packagename.egg-info/
+*.egg-info/
 .sass-cache
 .DS_Store
 *tar.gz

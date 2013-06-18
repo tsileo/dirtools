@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# YuPyKey documentation build configuration file, created by
+# Dirtools documentation build configuration file, created by
 # sphinx-quickstart on Mon May 13 20:21:15 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -183,7 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'YuPyKey.tex', u'YuPyKey Documentation',
+  ('index', 'Dirtools.tex', u'Dirtools Documentation',
    u'Thomas Sileo', 'manual'),
 ]
 
@@ -213,7 +213,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'yupykey', u'YuPyKey Documentation',
+    ('index', 'Dirtools', u'Dirtools Documentation',
      [u'Thomas Sileo'], 1)
 ]
 
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'YuPyKey', u'YuPyKey Documentation',
-   u'Thomas Sileo', 'YuPyKey', 'One line description of project.',
+  ('index', 'Dirtools', u'Dirtools Documentation',
+   u'Thomas Sileo', 'Dirtools', 'One line description of project.',
    'Miscellaneous'),
 ]
 

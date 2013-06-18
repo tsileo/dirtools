@@ -4,10 +4,10 @@ import os
 import hashlib
 
 from globster import Globster
-# TODO se decider entre `path' et `filename', `filepath' and `directory'
-# TODO? faire des raccourcis, genre dirtools.listsubdir => Dir(path).subdirs
 
 log = logging.getLogger("dirtools")
+
+# TODO write the test with bakthat directory as input
 
 
 def load_patterns(exclude_file=".exclude"):
