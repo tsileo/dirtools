@@ -8,6 +8,13 @@ Dirtools is a little Python package aimed to provide the following features:
 * Generate a hash for a directory tree in order to check if a directory has been modified.
 * Search recursively for all subidirs containing a given filename (all projects directory inside a dir).
 
+Installation
+============
+
+.. code-block::
+
+    $ pip install dirtools
+
 
 Getting Started
 ===============
