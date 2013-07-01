@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import logging
 import os
 import hashlib
@@ -74,25 +74,22 @@ class Dir(object):
             self.patterns.extend(load_patterns(self.exclude_file))
         self.globster = Globster(self.patterns)
 
-    @property
     def hash(self):
         """ Hash for the entire directory (except excluded files) recursively. """
         shadir = hashlib.sha256()
-        for f in self.files:
+        for f in self.files():
             try:
-                shadir.update(filehash(f))
-            except (IOError, OSError):
-                pass
+                shadir.update(filehash(os.path.join(self.directory, f)))
+            except (IOError, OSError) as exc:
+                print exc
         return shadir.hexdigest()
 
-    @property
     def files(self):
         """ Generator for all the files not excluded recursively. """
         for root, dirs, files in self.walk():
             for f in files:
                 yield self.relpath(os.path.join(root, f))
 
-    @property
     def subdirs(self):
         """ List of all subdirs (except excluded). """
         for root, dirs, files in self.walk():

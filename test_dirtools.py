@@ -44,9 +44,8 @@ class TestDirtools(unittest.TestCase):
         self.open = dirtools.open
 
     def testFiles(self):
-        """ Check that Dir.files return all files,
-        except those excluded. """
-        self.assertEqual(sorted(self.dir.files),
+        """ Check that Dir.files return all files, except those excluded. """
+        self.assertEqual(sorted(self.dir.files()),
                          sorted(["file1",
                                  "file2",
                                  "excluded_dir/excluded_file",
@@ -54,25 +53,19 @@ class TestDirtools(unittest.TestCase):
                                  "dir2/file_dir2"]))
 
     def testSubdirs(self):
-        """ Check that Dir.subdirs return all subdirs,
-        except those excluded. """
-        self.assertEqual(sorted(self.dir.subdirs),
+        """ Check that Dir.subdirs return all subdirs, except those excluded. """
+        self.assertEqual(sorted(self.dir.subdirs()),
                          sorted(["excluded_dir",
                                  "dir1",
                                  "dir1/subdir1",
                                  "dir2"]))
 
     def testHashdir(self):
-        """ Check that the hashdir changes
-        when a file change in the tree. """
-        hashdir = self.dir.hash
-        print self.open('/test_dirtools/file2').read()
-        print dirtools.filehash('/test_dirtools/file2')
+        """ Check that the hashdir changes when a file change in the tree. """
+        hashdir = self.dir.hash()
         with self.open('/test_dirtools/file2', 'w') as f:
             f.write("new content")
-        print self.open('/test_dirtools/file2').read()
-        print dirtools.filehash('/test_dirtools/file2')
-        new_hashdir = dirtools.Dir('/test_dirtools').hash
+        new_hashdir = self.dir.hash()
 
         self.assertNotEqual(hashdir, new_hashdir)
 
@@ -81,8 +74,7 @@ class TestDirtools(unittest.TestCase):
         pass
 
     def testProjects(self):
-        """ Check if Dir.find_projects find all projects
-        in the directory tree. """
+        """ Check if Dir.find_projects find all projects in the directory tree. """
         pass
 
 if __name__ == '__main__':

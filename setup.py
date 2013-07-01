@@ -17,6 +17,8 @@ setup(
     py_modules=["dirtools"],
     long_description=read("README.rst"),
     install_requires=["globster"],
+    tests_require=["pyfakefs"],
+    test_suite="test_dirtools",
 #    entry_points={'console_scripts': ["mycommand = dirtools:main"]},
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -25,5 +27,4 @@ setup(
         "Programming Language :: Python",
     ],
     scripts=["dirtools.py"],
-#    test_suite="test_dirtools",
 )
