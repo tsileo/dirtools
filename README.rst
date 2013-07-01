@@ -53,7 +53,7 @@ Here is how to compute the hash of a directory, excluded files ares skipped if a
     from dirtools import Dir
 
     d = Dir('/path/to/dir')
-    hashdir = d.hash
+    hashdir = d.hash()
 
 
 Find directories containing a file
@@ -98,7 +98,7 @@ List all subdirectories of a directory
 
     d = Dir('/path/to/dir')
 
-    dirs = d.subdirs
+    dirs = d.subdirs()
 
 
 List all files recusively
@@ -110,7 +110,7 @@ List all files recusively
 
     d = Dir('/path/to/dir')
 
-    files = d.files
+    files = d.files()
 
 
 License (MIT)

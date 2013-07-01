@@ -7,7 +7,7 @@ from globster import Globster
 
 log = logging.getLogger("dirtools")
 
-# TODO write the test with bakthat directory as input
+# TODO abs=True args for .files(), .subdirs() ?
 
 
 def load_patterns(exclude_file=".exclude"):
@@ -136,9 +136,12 @@ class Dir(object):
         :return: The list of subdirs with a `file_identifier' in it.
 
         """
-        for d in self.subdirs:
-            if os.path.isfile(os.path.join(d, file_identifier)):
-                yield d
+        projects = []
+        for d in self.subdirs():
+            project_file = os.path.join(self.directory, d, file_identifier)
+            if os.path.isfile(project_file):
+                projects.append(d)
+        return projects
 
     def relpath(self, path):
         """ Return a relative filepath to path from Dir path. """
