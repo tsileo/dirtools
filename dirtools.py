@@ -161,11 +161,13 @@ class Dir(object):
             archive = tempfile.NamedTemporaryFile(delete=False)
             tar_args = ()
             tar_kwargs = {'fileobj': archive}
+            _return = archive.name
         else:
             tar_args = (archive_path)
             tar_kwargs = {}
+            _return = archive_path
         tar_kwargs.update({'mode': 'w:gz'})
         with closing(tarfile.open(*tar_args, **tar_kwargs)) as tar:
             tar.add(self.path, arcname=self.directory, exclude=self.is_excluded)
 
-        return archive.name
+        return _return
