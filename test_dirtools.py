@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """ test_dirtools.py - Test the dirtools module with pyfakefs. """
-
+import shutil
 import unittest
+import os
+import tarfile
 
 try:
     import fake_filesystem
@@ -85,6 +87,54 @@ class TestDirtools(unittest.TestCase):
     def testProjects(self):
         """ Check if Dir.find_projects find all projects in the directory tree. """
         self.assertEqual(self.dir.find_projects(".project"), ['dir1/subdir1'])
+
+    def testCompression(self):
+        """ Check the compression, withouth pyfakefs because it doesn't support tarfile. """
+        dirtools.os = os
+        dirtools.open = open
+
+        test_dir = '/tmp/test_dirtools'
+
+        if os.path.isdir(test_dir):
+            shutil.rmtree(test_dir)
+        os.mkdir(test_dir)
+
+        with open(os.path.join(test_dir, 'file1'), 'w') as f:
+            f.write('content1')
+        with open(os.path.join(test_dir, 'file2.pyc'), 'w') as f:
+            f.write('excluded')
+        os.mkdir(os.path.join(test_dir, 'dir1'))
+        with open(os.path.join(test_dir, 'dir1/file1'), 'w') as f:
+            f.write('content1')
+
+        cdir = dirtools.Dir(test_dir)
+
+        archive_path = cdir.compress_to()
+
+        tar = tarfile.open(archive_path)
+
+        test_dir_extract = '/tmp/test_dirtools_extract'
+
+        if os.path.isdir(test_dir_extract):
+            shutil.rmtree(test_dir_extract)
+        os.mkdir(test_dir_extract)
+
+        tar.extractall(test_dir_extract)
+
+        extracted_dir = dirtools.Dir(os.path.join(test_dir_extract, 'test_dirtools'))
+
+        self.assertEqual(sorted(extracted_dir.files()),
+                         sorted(cdir.files()))
+
+        self.assertEqual(sorted(extracted_dir.subdirs()),
+                         sorted(cdir.subdirs()))
+
+        self.assertEqual(extracted_dir.hash(),
+                         cdir.hash())
+
+        shutil.rmtree(test_dir)
+        shutil.rmtree(test_dir_extract)
+        os.remove(archive_path)
 
 if __name__ == '__main__':
     unittest.main()

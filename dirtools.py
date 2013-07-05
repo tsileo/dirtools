@@ -2,6 +2,9 @@
 import logging
 import os
 import hashlib
+from contextlib import closing  # for Python2.6 compatibility
+import tarfile
+import tempfile
 
 from globster import Globster
 
@@ -66,7 +69,7 @@ class Dir(object):
     """
     def __init__(self, directory=".", exclude_file=".exclude",
                  excludes=['.git/', '.hg/', '.svn/']):
-        self.directory = directory
+        self.directory = os.path.basename(directory)
         self.path = os.path.abspath(directory)
         self.exclude_file = os.path.join(self.path, exclude_file)
         self.patterns = excludes
@@ -80,8 +83,8 @@ class Dir(object):
         for f in self.files():
             try:
                 shadir.update(filehash(os.path.join(self.directory, f)))
-            except (IOError, OSError) as exc:
-                print exc
+            except (IOError, OSError):
+                pass
         return shadir.hexdigest()
 
     def files(self):
@@ -146,3 +149,23 @@ class Dir(object):
     def relpath(self, path):
         """ Return a relative filepath to path from Dir path. """
         return os.path.relpath(path, start=self.path)
+
+    def compress_to(self, archive_path=None):
+        """ Compress the directory with gzip using tarlib.
+
+        :type archive_path: str
+        :param archive_path: Path to the archive, if None, a tempfile is created
+
+        """
+        if archive_path is None:
+            archive = tempfile.NamedTemporaryFile(delete=False)
+            tar_args = ()
+            tar_kwargs = {'fileobj': archive}
+        else:
+            tar_args = (archive_path)
+            tar_kwargs = {}
+        tar_kwargs.update({'mode': 'w:gz'})
+        with closing(tarfile.open(*tar_args, **tar_kwargs)) as tar:
+            tar.add(self.path, arcname=self.directory, exclude=self.is_excluded)
+
+        return archive.name

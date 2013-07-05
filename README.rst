@@ -34,20 +34,6 @@ Here is how to check if a file should be excluded:
     d.is_excluded('/path/to/dir/script.pyc')
 
 
-Using dirtools to exclude files with tarfile
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    import tarfile
-    from dirtools import Dir
-
-    d = Dir('/path/to/mydir', exclude_file='.gitignore')
-
-    with tarfile.open(fileobj=out, mode="w:gz")) as tar:
-        tar.add(filename, arcname=arcname, exclude=d.is_excluded)
-
-
 Hashdir
 -------
 
@@ -73,7 +59,39 @@ We'll call these directories **project**, ``find_projects`` will search recursiv
     from dirtools import Dir
 
     d = Dir('/path/to/dir')
-    projects = d.find_projects(".project")
+    projects = d.find_projects('.project')
+
+
+Compress the directory with gzip
+----------------------------------
+
+Dirtools provides a helper to compress the whole directory (except excluded files/dirs) with gzip.
+
+.. code-block:: python
+
+    from dirtools import Dir
+
+    d = Dir('/path/to/dir')
+    
+    # By default, dirtools will create a temporary file to store the archive for you
+    tmp_archive = d.compress_to()
+
+    # But you can specify a file
+    archive_path = '/home/thomas/mydir.tgz'
+    d.compress_to(archive_path)
+
+
+Or if you want to do it manually:
+
+.. code-block:: python
+
+    import tarfile
+    from dirtools import Dir
+
+    d = Dir('/path/to/mydir', exclude_file='.gitignore')
+
+    with tarfile.open(fileobj=out, mode="w:gz")) as tar:
+        tar.add(filename, arcname=arcname, exclude=d.is_excluded)
 
 
 Helpers
