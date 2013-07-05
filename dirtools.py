@@ -38,7 +38,7 @@ def filehash(filepath, blocksize=4096):
     :param blocksize: Size of the chunk when processing the file
 
     """
-    sha = hashlib.sha256()
+    sha = hashlib.sha512()
     with open(filepath, 'rb') as fp:
         while 1:
             data = fp.read(blocksize)
@@ -47,6 +47,37 @@ def filehash(filepath, blocksize=4096):
             else:
                 break
     return sha.hexdigest()
+
+
+class File(object):
+    def __init__(self, path):
+        self.file = os.path.basename(path)
+        self.path = os.path.abspath(path)
+
+    def hash(self):
+        return filehash(self.path)
+
+    def compress_to(self, archive_path=None):
+        """ Compress the directory with gzip using tarlib.
+
+        :type archive_path: str
+        :param archive_path: Path to the archive, if None, a tempfile is created
+
+        """
+        if archive_path is None:
+            archive = tempfile.NamedTemporaryFile(delete=False)
+            tar_args = ()
+            tar_kwargs = {'fileobj': archive}
+            _return = archive.name
+        else:
+            tar_args = (archive_path)
+            tar_kwargs = {}
+            _return = archive_path
+        tar_kwargs.update({'mode': 'w:gz'})
+        with closing(tarfile.open(*tar_args, **tar_kwargs)) as tar:
+            tar.add(self.path, arcname=self.file)
+
+        return _return
 
 
 class Dir(object):
@@ -79,7 +110,7 @@ class Dir(object):
 
     def hash(self):
         """ Hash for the entire directory (except excluded files) recursively. """
-        shadir = hashlib.sha256()
+        shadir = hashlib.sha512()
         for f in self.files():
             try:
                 shadir.update(filehash(os.path.join(self.directory, f)))
