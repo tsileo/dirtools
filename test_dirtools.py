@@ -60,12 +60,26 @@ class TestDirtools(unittest.TestCase):
                                  "dir1/subdir1/.project",
                                  "dir2/file_dir2"]))
 
+    def testFilesWithPatterns(self):
+        """ Check that Dir.files return all files matching the pattern, except those excluded. """
+        self.assertEqual(sorted(self.dir.files("*.py")),
+                         sorted(["file3.py"]))
+
+        self.assertEqual(sorted(self.dir.files("*_dir2")),
+                         sorted(["dir2/file_dir2"]))
+
     def testSubdirs(self):
         """ Check that Dir.subdirs return all subdirs, except those excluded. """
         self.assertEqual(sorted(self.dir.subdirs()),
                          sorted(["dir1",
                                  "dir1/subdir1",
                                  "dir2"]))
+
+    def testSubdirsWithPatterns(self):
+        """ Check that Dir.subdirs return all subdirs matching the pattern, except those excluded. """
+        self.assertEqual(sorted(self.dir.subdirs("*1")),
+                         sorted(["dir1",
+                                 "dir1/subdir1"]))
 
     def testHashdir(self):
         """ Check that the hashdir changes when a file change in the tree. """

@@ -27,8 +27,8 @@ def load_patterns(exclude_file=".exclude"):
     return filter(None, open(exclude_file).read().split("\n"))
 
 
-def filehash(filepath, blocksize=4096):
-    """ Return the hash for the file `filepath', processing the file
+def _filehash(filepath, blocksize=4096):
+    """ Return the hash object for the file `filepath', processing the file
     by chunk of `blocksize'.
 
     :type filepath: str
@@ -46,6 +46,21 @@ def filehash(filepath, blocksize=4096):
                 sha.update(data)
             else:
                 break
+    return sha
+
+
+def filehash(filepath, blocksize=4096):
+    """ Return the hash hexdigest() for the file `filepath', processing the file
+    by chunk of `blocksize'.
+
+    :type filepath: str
+    :param filepath: Path to file
+
+    :type blocksize: int
+    :param blocksize: Size of the chunk when processing the file
+
+    """
+    sha = _filehash(filepath, blocksize)
     return sha.hexdigest()
 
 
@@ -54,7 +69,12 @@ class File(object):
         self.file = os.path.basename(path)
         self.path = os.path.abspath(path)
 
+    def _hash(self):
+        """ Return the hash object. """
+        return _filehash(self.path)
+
     def hash(self):
+        """ Return the hash hexdigest. """
         return filehash(self.path)
 
     def compress_to(self, archive_path=None):
@@ -118,17 +138,33 @@ class Dir(object):
                 pass
         return shadir.hexdigest()
 
-    def files(self):
-        """ Generator for all the files not excluded recursively. """
+    def files(self, pattern=None):
+        """ Generator for all the files not excluded recursively.
+
+        :type pattern: str
+        :param pattern: Unix style (glob like/gitignore like) pattern
+
+        """
+        if pattern is not None:
+            globster = Globster([pattern])
         for root, dirs, files in self.walk():
             for f in files:
-                yield self.relpath(os.path.join(root, f))
+                if pattern is None or (pattern is not None and globster.match(f)):
+                    yield self.relpath(os.path.join(root, f))
 
-    def subdirs(self):
-        """ List of all subdirs (except excluded). """
+    def subdirs(self, pattern=None):
+        """ List of all subdirs (except excluded).
+
+        :type pattern: str
+        :param pattern: Unix style (glob like/gitignore like) pattern
+
+        """
+        if pattern is not None:
+            globster = Globster([pattern])
         for root, dirs, files in self.walk():
             for d in dirs:
-                yield self.relpath(os.path.join(root, d))
+                if pattern is None or (pattern is not None and globster.match(d)):
+                    yield self.relpath(os.path.join(root, d))
 
     def is_excluded(self, path):
         """ Return True if `path' should be excluded
