@@ -128,7 +128,7 @@ List all subdirectories of a directory
     myproject_dirs = d.subdirs('myproject_*')
 
 
-List all files recusively
+List all files recursively
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python

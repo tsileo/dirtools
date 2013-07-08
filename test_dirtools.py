@@ -114,12 +114,13 @@ class TestDirtools(unittest.TestCase):
         os.mkdir(test_dir)
 
         with open(os.path.join(test_dir, 'file1'), 'w') as f:
-            f.write('content1')
+            f.write(os.urandom(2 ** 10))
+
         with open(os.path.join(test_dir, 'file2.pyc'), 'w') as f:
             f.write('excluded')
         os.mkdir(os.path.join(test_dir, 'dir1'))
         with open(os.path.join(test_dir, 'dir1/file1'), 'w') as f:
-            f.write('content1')
+            f.write(os.urandom(2 ** 10))
 
         cdir = dirtools.Dir(test_dir)
 

@@ -122,6 +122,7 @@ class Dir(object):
                  excludes=['.git/', '.hg/', '.svn/']):
         self.directory = os.path.basename(directory)
         self.path = os.path.abspath(directory)
+        self.parent = os.path.dirname(self.path)
         self.exclude_file = os.path.join(self.path, exclude_file)
         self.patterns = excludes
         if os.path.isfile(self.exclude_file):
@@ -133,7 +134,7 @@ class Dir(object):
         shadir = hashlib.sha512()
         for f in self.files():
             try:
-                shadir.update(filehash(os.path.join(self.directory, f)))
+                shadir.update(filehash(os.path.join(self.path, f)))
             except (IOError, OSError):
                 pass
         return shadir.hexdigest()
