@@ -125,6 +125,8 @@ List all subdirectories of a directory
 
     dirs = d.subdirs()
 
+    myproject_dirs = d.subdirs('myproject_*')
+
 
 List all files recusively
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,6 +138,8 @@ List all files recusively
     d = Dir('/path/to/dir')
 
     files = d.files()
+
+    py_files = d.files('*.py')
 
 
 License (MIT)
