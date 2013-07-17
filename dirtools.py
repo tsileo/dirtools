@@ -120,6 +120,8 @@ class Dir(object):
     """
     def __init__(self, directory=".", exclude_file=".exclude",
                  excludes=['.git/', '.hg/', '.svn/']):
+        if not os.path.isdir(directory):
+            raise TypeError("Directory must be a directory.")
         self.directory = os.path.basename(directory)
         self.path = os.path.abspath(directory)
         self.parent = os.path.dirname(self.path)
@@ -139,8 +141,10 @@ class Dir(object):
                 pass
         return shadir.hexdigest()
 
-    def files(self, pattern=None):
+    def iterfiles(self, pattern=None, abspath=False):
         """ Generator for all the files not excluded recursively.
+
+        Return relative path.
 
         :type pattern: str
         :param pattern: Unix style (glob like/gitignore like) pattern
@@ -151,10 +155,29 @@ class Dir(object):
         for root, dirs, files in self.walk():
             for f in files:
                 if pattern is None or (pattern is not None and globster.match(f)):
-                    yield self.relpath(os.path.join(root, f))
+                    if abspath:
+                        yield os.path.join(root, f)
+                    else:
+                        yield self.relpath(os.path.join(root, f))
 
-    def subdirs(self, pattern=None):
-        """ List of all subdirs (except excluded).
+    def files(self, pattern=None, sort_key=lambda k: k, sort_reverse=False, abspath=False):
+        """ Return a sorted list containing relative path of all files (recursively).
+
+        :type pattern: str
+        :param pattern: Unix style (glob like/gitignore like) pattern
+
+        :param sort_key: key argument for sorted
+
+        :param sort_reverse: reverse argument for sorted
+
+        :rtype: list
+        :return: List of all relative files paths.
+
+        """
+        return sorted(self.iterfiles(pattern, abspath=abspath), key=sort_key, reverse=sort_reverse)
+
+    def itersubdirs(self, pattern=None, abspath=False):
+        """ Generator for all subdirs (except excluded).
 
         :type pattern: str
         :param pattern: Unix style (glob like/gitignore like) pattern
@@ -165,7 +188,25 @@ class Dir(object):
         for root, dirs, files in self.walk():
             for d in dirs:
                 if pattern is None or (pattern is not None and globster.match(d)):
-                    yield self.relpath(os.path.join(root, d))
+                    if abspath:
+                        yield os.path.join(root, d)
+                    else:
+                        yield self.relpath(os.path.join(root, d))
+
+    def subdirs(self, pattern=None, sort_key=lambda k: k, sort_reverse=False, abspath=False):
+        """ Return a sorted list containing relative path of all subdirs (recursively).
+
+        :type pattern: str
+        :param pattern: Unix style (glob like/gitignore like) pattern
+
+        :param sort_key: key argument for sorted
+
+        :param sort_reverse: reverse argument for sorted
+
+        :rtype: list
+        :return: List of all relative files paths.
+        """
+        return sorted(self.itersubdirs(pattern, abspath=abspath), key=sort_key, reverse=sort_reverse)
 
     def is_excluded(self, path):
         """ Return True if `path' should be excluded
@@ -181,6 +222,8 @@ class Dir(object):
         (yields a 3-tuple (dirpath, dirnames, filenames)
         except it exclude all files/directories on the fly. """
         for root, dirs, files in os.walk(self.path, topdown=True):
+            # TODO relative walk, recursive call if root excluder found???
+            #root_excluder = get_root_excluder(root)
             ndirs = []
             # First we exclude directories
             for d in list(dirs):
