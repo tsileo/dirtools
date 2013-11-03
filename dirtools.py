@@ -208,6 +208,17 @@ class Dir(object):
         """
         return sorted(self.itersubdirs(pattern, abspath=abspath), key=sort_key, reverse=sort_reverse)
 
+    def size(self):
+        """ Return directory size in bytes.
+
+        :rtype: int
+        :return: Total directory size in bytes.
+        """
+        dir_size = 0
+        for f in self.iterfiles(abspath=True):
+            dir_size += os.path.getsize(f)
+        return dir_size
+
     def is_excluded(self, path):
         """ Return True if `path' should be excluded
         given patterns in the `exclude_file'. """
