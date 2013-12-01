@@ -38,7 +38,7 @@ def _filehash(filepath, blocksize=4096):
     :param blocksize: Size of the chunk when processing the file
 
     """
-    sha = hashlib.sha512()
+    sha = hashlib.sha256()
     with open(filepath, 'rb') as fp:
         while 1:
             data = fp.read(blocksize)
@@ -131,12 +131,19 @@ class Dir(object):
             self.patterns.extend(load_patterns(self.exclude_file))
         self.globster = Globster(self.patterns)
 
-    def hash(self):
-        """ Hash for the entire directory (except excluded files) recursively. """
-        shadir = hashlib.sha512()
+    def hash(self, index_func=os.path.getmtime):
+        """ Hash for the entire directory (except excluded files) recursively.
+
+        Use mtime instead of sha256 by default for a faster hash.
+
+        >>> dir.hash(index_func=dirtools.filehash)
+
+        """
+        # TODO alternative to filehash => mtime as a faster alternative
+        shadir = hashlib.sha256()
         for f in self.files():
             try:
-                shadir.update(filehash(os.path.join(self.path, f)))
+                shadir.update(str(index_func(os.path.join(self.path, f))))
             except (IOError, OSError):
                 pass
         return shadir.hexdigest()
@@ -293,3 +300,65 @@ class Dir(object):
             tar.add(self.path, arcname=self.directory, exclude=self.is_excluded)
 
         return _return
+
+
+class DirState(object):
+    def __init__(self, _dir=None, state=None, index_cmp=os.path.getmtime):
+        self._dir = _dir
+        self.state = state or self.compute_state()
+        self.index_cmp = index_cmp
+
+    def compute_state(self):
+        """ Generate the index. """
+        data = {}
+        data['directory'] = self._dir.path
+        data['files'] = list(self._dir.files())
+        data['subdirs'] = list(self._dir.subdirs())
+        data['index'] = self.index()
+        return data
+
+    def index(self):
+        index = {}
+        for f in self._dir.iterfiles():
+            try:
+                index[f] = self.index_cmp(os.path.join(self._dir.path, f))
+            except:
+                pass
+        return index
+
+    def __sub__(self, other):
+        """ Compute diff with operator overloading.
+
+        >>> path =DirState(Dir('/path'))
+        >>> path_copy = DirState(Dir('/path_copy'))
+        >>> diff =  path_copy - path
+        >>> # Equals to
+        >>> diff = compute_diff(path_copy.state, path.state)
+
+        """
+        if self.index_cmp != other.index_cmp:
+            raise Exception('Both DirState instance must have the same index_cmp.')
+        return compute_diff(self.state, other.state)
+
+
+def compute_diff(dir_base, dir_cmp):
+    """ Compare `dir_base' and `dir_cmp' and returns a list with
+    the following keys:
+     - deleted files `deleted'
+     - created files `created'
+     - updated files `updated'
+     - deleted directories `deleted_dirs'
+
+    """
+    data = {}
+    data['deleted'] = list(set(dir_cmp['files']) - set(dir_base['files']))
+    data['created'] = list(set(dir_base['files']) - set(dir_cmp['files']))
+    data['updated'] = []
+    data['deleted_dirs'] = list(set(dir_cmp['subdirs']) - set(dir_base['subdirs']))
+
+    for f in set(dir_cmp['files']).intersection(set(dir_base['files'])):
+        if dir_base['index'].get(f) != dir_cmp['index'].get(f):
+            f_abs = os.path.join(dir_base['directory'], f)
+            data['updated'].append(f_abs)
+
+    return data
