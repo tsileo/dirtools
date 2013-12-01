@@ -305,8 +305,8 @@ class Dir(object):
 class DirState(object):
     def __init__(self, _dir=None, state=None, index_cmp=os.path.getmtime):
         self._dir = _dir
-        self.state = state or self.compute_state()
         self.index_cmp = index_cmp
+        self.state = state or self.compute_state()
 
     def compute_state(self):
         """ Generate the index. """
@@ -322,8 +322,8 @@ class DirState(object):
         for f in self._dir.iterfiles():
             try:
                 index[f] = self.index_cmp(os.path.join(self._dir.path, f))
-            except:
-                pass
+            except Exception, exc:
+                print f, exc
         return index
 
     def __sub__(self, other):
@@ -357,8 +357,7 @@ def compute_diff(dir_base, dir_cmp):
     data['deleted_dirs'] = list(set(dir_cmp['subdirs']) - set(dir_base['subdirs']))
 
     for f in set(dir_cmp['files']).intersection(set(dir_base['files'])):
-        if dir_base['index'].get(f) != dir_cmp['index'].get(f):
-            f_abs = os.path.join(dir_base['directory'], f)
-            data['updated'].append(f_abs)
+        if dir_base['index'][f] != dir_cmp['index'][f]:
+            data['updated'].append(f)
 
     return data

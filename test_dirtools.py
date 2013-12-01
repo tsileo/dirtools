@@ -5,9 +5,11 @@ import shutil
 import unittest
 import os
 import tarfile
+import time
 
 try:
     import fake_filesystem
+    import fake_filesystem_shutil
 except ImportError:
     print "You must install pyfakefs in order to run the test suite."
 
@@ -48,6 +50,8 @@ class TestDirtools(unittest.TestCase):
         self.dir = dirtools.Dir('/test_dirtools')
         self.os = dirtools.os
         self.open = dirtools.open
+        self.shutil = fake_filesystem_shutil.FakeShutilModule(fk)
+        self.fk = fk
 
     def testFiles(self):
         """ Check that Dir.files return all files, except those excluded. """
@@ -83,12 +87,26 @@ class TestDirtools(unittest.TestCase):
 
     def testHashdir(self):
         """ Check that the hashdir changes when a file change in the tree. """
-        hashdir = self.dir.hash()
+        hashdir = self.dir.hash(dirtools.filehash)
         with self.open('/test_dirtools/file2', 'w') as f:
             f.write("new content")
-        new_hashdir = self.dir.hash()
+        new_hashdir = self.dir.hash(dirtools.filehash)
 
         self.assertNotEqual(hashdir, new_hashdir)
+
+    def testDirState(self):
+        dir_state = dirtools.DirState(self.dir, index_cmp=dirtools.filehash)
+        self.shutil.copytree('/test_dirtools', 'test_dirtools2')
+        with self.open('/test_dirtools2/dir1/subdir1/file_subdir1', 'w') as f:
+            f.write("dir state")
+        with self.open('/test_dirtools2/new_file', 'w') as f:
+            f.write("dir state")
+        self.os.remove('/test_dirtools2/file1')
+        self.shutil.rmtree('/test_dirtools2/dir2')
+        dir_state2 = dirtools.DirState(dirtools.Dir('/test_dirtools2'), index_cmp=dirtools.filehash)
+        diff = dir_state2 - dir_state
+        self.assertEqual(diff, {'deleted': ['file1', 'dir2/file_dir2'], 'updated': ['dir1/subdir1/file_subdir1'], 'deleted_dirs': ['dir2'], 'created': ['new_file']})
+        self.assertEqual(diff, dirtools.compute_diff(dir_state2.state, dir_state.state))
 
     def testExclude(self):
         """ Check that Dir.is_excluded actually exclude files. """
@@ -144,8 +162,8 @@ class TestDirtools(unittest.TestCase):
         self.assertEqual(sorted(extracted_dir.subdirs()),
                          sorted(cdir.subdirs()))
 
-        self.assertEqual(extracted_dir.hash(),
-                         cdir.hash())
+        self.assertEqual(extracted_dir.hash(dirtools.filehash),
+                         cdir.hash(dirtools.filehash))
 
         shutil.rmtree(test_dir)
         shutil.rmtree(test_dir_extract)
