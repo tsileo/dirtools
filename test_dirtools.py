@@ -154,7 +154,7 @@ class TestDirtools(unittest.TestCase):
 
         tar.extractall(test_dir_extract)
 
-        extracted_dir = dirtools.Dir(os.path.join(test_dir_extract, 'test_dirtools'))
+        extracted_dir = dirtools.Dir(test_dir_extract)
 
         self.assertEqual(sorted(extracted_dir.files()),
                          sorted(cdir.files()))
