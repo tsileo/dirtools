@@ -5,6 +5,8 @@ import hashlib
 from contextlib import closing  # for Python2.6 compatibility
 import tarfile
 import tempfile
+from datetime import datetime
+import json
 
 from globster import Globster
 
@@ -183,6 +185,11 @@ class Dir(object):
         """
         return sorted(self.iterfiles(pattern, abspath=abspath), key=sort_key, reverse=sort_reverse)
 
+    def get(self, pattern, sort_key=lambda k: k, sort_reverse=False, abspath=False):
+        res = self.files(pattern, sort_key=sort_key, sort_reverse=sort_reverse, abspath=abspath)
+        if res:
+            return res[0]
+
     def itersubdirs(self, pattern=None, abspath=False):
         """ Generator for all subdirs (except excluded).
 
@@ -288,16 +295,16 @@ class Dir(object):
         """
         if archive_path is None:
             archive = tempfile.NamedTemporaryFile(delete=False)
-            tar_args = ()
+            tar_args = []
             tar_kwargs = {'fileobj': archive}
             _return = archive.name
         else:
-            tar_args = (archive_path)
+            tar_args = [archive_path]
             tar_kwargs = {}
             _return = archive_path
         tar_kwargs.update({'mode': 'w:gz'})
         with closing(tarfile.open(*tar_args, **tar_kwargs)) as tar:
-            tar.add(self.path, arcname=self.directory, exclude=self.is_excluded)
+            tar.add(self.path, arcname='', exclude=self.is_excluded)
 
         return _return
 
@@ -339,6 +346,24 @@ class DirState(object):
         if self.index_cmp != other.index_cmp:
             raise Exception('Both DirState instance must have the same index_cmp.')
         return compute_diff(self.state, other.state)
+
+    def to_json(self, base_path='.', dt=None, fmt=None):
+        if fmt is None:
+            fmt = '{0}@{1}.json'
+        if dt is None:
+            dt = datetime.utcnow()
+        path = fmt.format(self._dir.path.strip('/').split('/')[-1],
+                          dt.isoformat())
+
+        with open(os.path.join(base_path, path), 'wb') as f:
+            f.write(json.dumps(self.state))
+
+        return os.path.abspath(path)
+
+    @classmethod
+    def from_json(cls, path):
+        with open(path, 'rb') as f:
+            return cls(state=json.loads(f.read()))
 
 
 def compute_diff(dir_base, dir_cmp):
