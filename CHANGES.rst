@@ -10,6 +10,8 @@
 - Now ``Dir.files`` and ``Dir.subdirs`` methods return sorted list.
  allowing custom sort options and abspath args that allow to choose between relative/absolute path.
 - Added Dir.size method to recursively compute directory size.
+- New ``DirState`` and ``compute_diff`` method.
+- Now skipping symlinks
 
 0.1.0 (2013-07-01)
 ==================

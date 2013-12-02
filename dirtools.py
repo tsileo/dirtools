@@ -254,12 +254,12 @@ class Dir(object):
             for d in list(dirs):
                 if self.is_excluded(os.path.join(root, d)):
                     dirs.remove(d)
-                else:
+                elif not os.path.islink(os.path.join(root, d)):
                     ndirs.append(d)
 
             nfiles = []
             for fpath in (os.path.join(root, f) for f in files):
-                if not self.is_excluded(fpath):
+                if not self.is_excluded(fpath) and not os.path.islink(fpath):
                     nfiles.append(os.path.relpath(fpath, root))
 
             yield root, ndirs, nfiles
@@ -354,11 +354,12 @@ class DirState(object):
             dt = datetime.utcnow()
         path = fmt.format(self._dir.path.strip('/').split('/')[-1],
                           dt.isoformat())
+        path = os.path.join(base_path, path)
 
-        with open(os.path.join(base_path, path), 'wb') as f:
+        with open(path, 'wb') as f:
             f.write(json.dumps(self.state))
 
-        return os.path.abspath(path)
+        return path
 
     @classmethod
     def from_json(cls, path):
