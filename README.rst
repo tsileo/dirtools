@@ -7,6 +7,8 @@ Dirtools is a little Python package aimed to provide the following features:
 * Exclude/ignore files in a directory, using .gitignore like syntax (unix filename pattern matching).
 * Generate a hash for a directory tree in order to check if a directory has been modified.
 * Search recursively for all subidirs containing a given filename (all projects directory inside a dir).
+* Track changes in a directory over time (without duplicating it or without having direct access to it).
+
 
 .. image:: https://pypip.in/v/dirtools/badge.png
         :target: https://crate.io/packages/dirtools
@@ -99,6 +101,28 @@ Or if you want to do it manually:
 
     with tarfile.open(fileobj=out, mode="w:gz")) as tar:
         tar.add(filename, arcname=arcname, exclude=d.is_excluded)
+
+
+Track changes in directories
+----------------------------
+
+Dirtools provides an helper ``DirIndex`` to help tracking changes in a directory over time, without duplicating it or without having direct access to it.
+
+.. code-block:: python
+
+    from dirtools import Dir, DirIndex
+
+    d = Dir(path)
+    dir_index = DirIndex(d)
+
+    index_file = dir_index.to_json()
+
+    # Later... after some changes
+
+    dir_index = DirIndex.from_json(index_file)
+    dir_index2 = DirIndex(d)
+
+    changes = dir_index2 - dir_index
 
 
 Helpers

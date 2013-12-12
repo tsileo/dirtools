@@ -310,6 +310,7 @@ class Dir(object):
 
 
 class DirState(object):
+    """ Hold a directory state / snapshot meta-data for later comparison. """
     def __init__(self, _dir=None, state=None, index_cmp=os.path.getmtime):
         self._dir = _dir
         self.index_cmp = index_cmp
@@ -336,7 +337,7 @@ class DirState(object):
     def __sub__(self, other):
         """ Compute diff with operator overloading.
 
-        >>> path =DirState(Dir('/path'))
+        >>> path = DirState(Dir('/path'))
         >>> path_copy = DirState(Dir('/path_copy'))
         >>> diff =  path_copy - path
         >>> # Equals to
