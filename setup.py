@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="dirtools",
-    version="0.1.0",
+    version="0.2.0",
     author="Thomas Sileo",
     author_email="thomas.sileo@gmail.com",
     description="Exclude/ignore files in a directory (using .gitignore like syntax), compute hash, search projects for an entire directory tree and gzip compression.",

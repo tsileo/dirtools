@@ -106,23 +106,23 @@ Or if you want to do it manually:
 Track changes in directories
 ----------------------------
 
-Dirtools provides an helper ``DirIndex`` to help tracking changes in a directory over time, without duplicating it or without having direct access to it.
+Dirtools provides an helper ``DirState`` to help tracking changes in a directory over time, without duplicating it or without having direct access to it.
 
 .. code-block:: python
 
-    from dirtools import Dir, DirIndex
+    from dirtools import Dir, DirState
 
     d = Dir(path)
-    dir_index = DirIndex(d)
+    dir_state = DirState(d)
 
-    index_file = dir_index.to_json()
+    state_file = dir_state.to_json()
 
     # Later... after some changes
 
-    dir_index = DirIndex.from_json(index_file)
-    dir_index2 = DirIndex(d)
+    dir_state = DirState.from_json(state_file)
+    dir_state2 = DirState(d)
 
-    changes = dir_index2 - dir_index
+    changes = dir_state2 - dir_state
 
 
 Helpers

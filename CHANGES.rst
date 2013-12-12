@@ -2,7 +2,7 @@
  Dirtools Changelog
 ====================
 
-0.1.1 (2013-12-12)
+0.2.0 (2013-12-12)
 ==================
 
 - New ``compress_to`` methods for easy gzip compression with tarfile.
