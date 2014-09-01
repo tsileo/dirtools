@@ -330,8 +330,8 @@ class DirState(object):
         for f in self._dir.iterfiles():
             try:
                 index[f] = self.index_cmp(os.path.join(self._dir.path, f))
-            except Exception, exc:
-                print f, exc
+            except Exception as exc:
+                print(f, exc)
         return index
 
     def __sub__(self, other):
